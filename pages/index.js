@@ -17,13 +17,19 @@ import Dialog from "@material-ui/core/Dialog"
 import DialogContent from "@material-ui/core/DialogContent"
 import RadioGroup from "@material-ui/core/RadioGroup"
 import Radio from "@material-ui/core/Radio"
+import Select from "@material-ui/core/Select"
+import Button from "@material-ui/core/Button"
+import MenuItem from "@material-ui/core/MenuItem"
 import { MuiPickersUtilsProvider, KeyboardDatePicker } from "@material-ui/pickers"
 import DateFnsUtils from "@date-io/date-fns"
+import { format } from "date-fns"
 
 import { makeStyles, useTheme } from "@material-ui/core/styles"
 
 import AddIcon from "@material-ui/icons/Add"
 import FilterListIcon from "@material-ui/icons/FilterList"
+
+import EnhancedTable from "../src/ui/EnhancedTable"
 
 
 
@@ -33,26 +39,39 @@ const useStyles = makeStyles(theme => ({
   },
   users: {
     marginRight: 0,
-  }
-
+  },
+  button: {
+    color: "#fff",
+    backgroundColor: theme.palette.common.orange,
+    borderRadius: 50,
+    textTransform: "none",
+    "&:hover": {
+      backgroundColor: theme.palette.secondary.light,
+    },
+  },
 }))
 
-function createData(name, date, service, features, complexity, plaforms, users, total) {
+function createData(name, date, service, features, complexity, platforms, users, total, search) {
   return {
       name, 
       date, 
       service, 
       features, 
       complexity, 
-      plaforms, 
+      platforms, 
       users, 
-      total
+      total,
+      search,
   }
 }
 
 export default function ProjectManager() {
   const classes = useStyles();
   const theme = useTheme();
+
+  const platformOptions = ["Web", "iOS", "Android"]
+  var featureOptions = ["Photo/Video", "GPS", "File Transfer", "Users/Authentication", "Biometrics", "Push Notifications"]
+  var websiteOptions = ["Basic", "Interactive", "E-Commerce"]
 
   const [websiteChecked, setWebsiteChecked] = useState(false);
   const [iosChecked, setIosChecked] = useState(false);
@@ -63,16 +82,68 @@ export default function ProjectManager() {
 
   const [name, setName] = useState("")
   const [service, setService] = useState("")
+  const [platforms, setPlatforms] = useState([])
   const [complexity, setComplexity] = useState("")
+  const [features, setFeatures] = useState([])
   const [users, setUsers] = useState("")
   const [date, setDate] = useState(new Date())
   const [total, setTotal] = useState("")
 
+  const [page, setPage] = React.useState(0);
+
+  const websiteValidation = name.length === 0 || total.length === 0 || features.length === 0 || features.length > 1;
+  const defaultValidation = name.length === 0 || total.length === 0 || features.length === 0 || users.length === 0 || complexity.length === 0 || platforms.length === 0 || service.length === 0
+
+  const addProject = () => {
+    setRows([...rows, 
+      createData(
+        name, 
+        format(date, "dd/MM/yy"), 
+        service, 
+        features.join(", "), 
+        service === "Website" ? "N/A" : complexity, 
+        service === "Website" ? "N/A" : platforms.join(", "), 
+        service === "Website" ? "N/A" : users, 
+        `€ ${total}`,
+        true
+        )        
+      ]);
+
+      setDialogOpen(false);
+      setName("")
+      setService("")
+      setPlatforms([])
+      setComplexity("")
+      setFeatures([])
+      setUsers("")
+      setDate(new Date)
+      setTotal("")
+
+  }
+
   const [rows, setRows] = useState([
-    createData("test", "28/10/20", "website", "E-Commerce", "N/A", "N/A", "N/A", "€1500,-"),
-    createData("test", "28/10/20", "Custom Software", "GPS, Push Notifications, Users/Authentication, FileTransfer", "Medium", "Web Application", "0-10", "€1600,-"),
-    createData("test", "28/10/20", "Custom Software", "Photo/Video, FileTransfer, Users/Authentication", "Low", "Web Application", "10-100", "€1600,-"),
+    createData("Test 1", "28/10/20", "Website", "E-Commerce", "N/A", "N/A", "N/A", "€1500,-", true),
+    createData("Test 2", "28/10/20", "Custom Software", "GPS, Push Notifications, Users/Authentication, FileTransfer", "Medium", "Web Application", "0-10", "€1600,-", true),
+    createData("Test 3", "28/10/20", "Custom Software", "Photo/Video, FileTransfer, Users/Authentication", "Low", "Web Application", "10-100", "€1600,-", true),
   ])
+
+  const [search, setSearch] = useState("")
+
+  const handleSearch = event => {
+    setSearch(event.target.value)
+
+    const rowData = rows.map(row => Object.values(row).filter(option => option !== true && option !== false));
+    const matches = rowData.map(row => 
+      row.map(
+        option => option.toLowerCase().includes(event.target.value.toLowerCase())
+        )
+      );
+    const newRows = [...rows]
+    matches.map((row, index) => row.includes(true) ? newRows[index].search = true : newRows[index].search = false)
+    setRows(newRows)
+    setPage(0);
+
+  }
 
   return (
     <MuiPickersUtilsProvider utils={DateFnsUtils}>
@@ -83,7 +154,10 @@ export default function ProjectManager() {
           </Typography>
         </Grid>
         <Grid item>
-          <TextField placeholder="Search project details of create a new entry." style={{width: "35em", marginLeft:"5em"}} InputProps={
+          <TextField placeholder="Search project details of create a new entry."
+          value={search}
+          onChange={handleSearch} 
+          style={{width: "35em", marginLeft:"5em"}} InputProps={
             {endAdornment: <InputAdornment position="end" style={{cursor: "pointer"}} onClick={() => setDialogOpen(true)}>
                 <AddIcon color="primary" style={{fontSize: 30}} />
             </InputAdornment>}}/>
@@ -135,42 +209,12 @@ export default function ProjectManager() {
               />
           </FormGroup>
         </Grid>
-        <Grid item container justifyContent="flex-end" style={{marginTop: "5em"}}>
-          <Grid item style={{marginRight: 75}}>
-            <FilterListIcon color="secondary" style={{fontSize: 50}}/>
-          </Grid>
-        </Grid>
-        <Grid item style={{marginBottom: "15em"}}>
-            <TableContainer component={Paper} elevation={0}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell align="center">Name</TableCell>
-                      <TableCell align="center">Date</TableCell>
-                      <TableCell align="center">Service</TableCell>
-                      <TableCell align="center">Features</TableCell>
-                      <TableCell align="center">Complexity</TableCell>
-                      <TableCell align="center">Platforms</TableCell>
-                      <TableCell align="center">Users</TableCell>
-                      <TableCell align="center">Total</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {rows.map((row, index) =>
-                      <TableRow key={index}>
-                          <TableCell align="center">{row.name}</TableCell>
-                          <TableCell align="center">{row.date}</TableCell>
-                          <TableCell align="center">{row.service}</TableCell>
-                          <TableCell align="center" style={{maxtWidth: "5em"}}>{row.features}</TableCell>
-                          <TableCell align="center">{row.complexity}</TableCell>
-                          <TableCell align="center">{row.platforms}</TableCell>
-                          <TableCell align="center">{row.users}</TableCell>
-                          <TableCell align="center">{row.total}</TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-            </TableContainer>
+        <Grid item style={{marginBottom: "35em", marginTop: "5em"}}>
+          <EnhancedTable
+              rows={rows}
+              page={page}
+              setPage={setPage}
+            />
         </Grid>
         <Dialog fullWidth maxWidth="md" open={dialogOpen} onClose={() => setDialogOpen(false)}>
           <DialogContent>
@@ -196,11 +240,20 @@ export default function ProjectManager() {
                       aria-label="service" 
                       name="service" 
                       value={service} 
-                      onChange={(event) => setService(event.target.value)}>
+                      onChange={(event) => {setService(event.target.value); setFeatures([])}}>
                         <FormControlLabel classes={{label: classes.service}} value="Website" label="Website" control={<Radio />} />
                         <FormControlLabel classes={{label: classes.service}} value="Mobile App" label="Mobile App" control={<Radio />} />
                         <FormControlLabel classes={{label: classes.service}} value="Custom Software" label="Custom Software" control={<Radio />} />
                       </RadioGroup>
+                    </Grid>
+                    <Grid item style={{marginTop: "5em"}}>
+                      <Select labelId="platforms" id="platforms" disabled={service === "Website"} multiple value={platforms} displayEmpty renderValue={platforms.length > 0 ? undefined : () => "Choose some platforms"} MenuProps={{style: {zIndex: 1302}}} style={{width: "12em"}} onChange={(event) => setPlatforms(event.target.value)}>
+                        {platformOptions.map(option => 
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>   
+                        )}
+                      </Select>
                     </Grid>
                   </Grid>
                 </Grid>
@@ -208,7 +261,7 @@ export default function ProjectManager() {
               <Grid item>
                 <Grid item container direction="column" sm style={{marginTop: 16}} alignItems="center">
                   <Grid item>
-                      <KeyboardDatePicker format="dd/MM/yyyy" value={date} onChange={(newDate) => setDate(newDate)} />
+                      <KeyboardDatePicker format="dd/MM/yyyy" value={date} onChange={(newDate) => setDate(newDate)} classes={{ classes: { root: classes.datePicker } }} />
                   </Grid>
                   <Grid item>
                     <Grid item container direction="column" style={{marginTop: "5em"}}>
@@ -221,9 +274,9 @@ export default function ProjectManager() {
                         name="complexity" 
                         value={complexity} 
                         onChange={(event) => setComplexity(event.target.value)}>
-                          <FormControlLabel classes={{label: classes.service}} value="Low" label="Low" control={<Radio />} />
-                          <FormControlLabel classes={{label: classes.service}} value="Medium" label="Medium" control={<Radio />} />
-                          <FormControlLabel classes={{label: classes.service}} value="High" label="High" control={<Radio />} />
+                          <FormControlLabel disabled={service === "Website"} classes={{label: classes.service}} value="Low" label="Low" control={<Radio />} />
+                          <FormControlLabel disabled={service === "Website"} classes={{label: classes.service}} value="Medium" label="Medium" control={<Radio />} />
+                          <FormControlLabel disabled={service === "Website"} classes={{label: classes.service}} value="High" label="High" control={<Radio />} />
                         </RadioGroup>
                       </Grid>
                     </Grid>
@@ -243,7 +296,7 @@ export default function ProjectManager() {
                     }}
                     onChange={(event) => setTotal(event.target.value)}/>
                   </Grid>
-                  <Grid item>
+                  <Grid item style={{alignSelf: "flex-end"}}>
                     <Grid item container direction="column" style={{marginTop: "5em"}}>
                       <Grid item>
                         <Typography variant="h4">Users</Typography>
@@ -254,14 +307,38 @@ export default function ProjectManager() {
                         name="users" 
                         value={users} 
                         onChange={(event) => setUsers(event.target.value)}>
-                          <FormControlLabel classes={{label: classes.service, root: classes.users}} value="0-10" label="0-10" control={<Radio />} />
-                          <FormControlLabel classes={{label: classes.service, root: classes.users}} value="10-100" label="10-100" control={<Radio />} />
-                          <FormControlLabel classes={{label: classes.service, root: classes.users}} value="100+" label="100+" control={<Radio />} />
+                          <FormControlLabel disabled={service === "Website"} classes={{label: classes.service, root: classes.users}} value="0-10" label="0-10" control={<Radio />} />
+                          <FormControlLabel disabled={service === "Website"} classes={{label: classes.service, root: classes.users}} value="10-100" label="10-100" control={<Radio />} />
+                          <FormControlLabel disabled={service === "Website"} classes={{label: classes.service, root: classes.users}} value="100+" label="100+" control={<Radio />} />
                         </RadioGroup>
                       </Grid>
                     </Grid>
                   </Grid>
+                  <Grid item style={{marginTop: "5em"}}>
+                      <Select labelId="features" id="features" multiple value={features} displayEmpty renderValue={features.length > 0 ? undefined : () => "Choose some features"} MenuProps={{style: {zIndex: 1302}}} style={{width: "12em"}} onChange={(event) => setFeatures(event.target.value)}>
+                        {service === "Website" ? featureOptions = websiteOptions : null}
+                        {featureOptions.map(option => 
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>   
+                        )}
+                      </Select>
+                    </Grid>
                 </Grid>
+              </Grid>
+            </Grid>
+            <Grid container justify="center" style={{marginTop: "3em"}}>
+              <Grid item>
+                <Button color="primary" style={{fontWeight: 300}} onClick={() => setDialogOpen(false)}>Cancel</Button>
+              </Grid>
+              <Grid item>
+                <Button 
+                variant="contained" 
+                className={classes.button}
+                disabled={service === "Website" ? websiteValidation : defaultValidation} 
+                onClick={() => addProject()}>
+                  Add Project +
+                </Button>
               </Grid>
             </Grid>
           </DialogContent>

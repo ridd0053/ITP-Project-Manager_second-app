@@ -128,5 +128,31 @@ export default createMuiTheme({
         borderWidth: 2,
       }
     },
+    MuiSvgIcon: {
+      root: {
+        "&.MuiSelect-icon": {
+          color: arcOrange,
+        }
+      }
+    },
+    MuiDialog: {
+      root: {
+        zIndex: "1302 !important",
+      },
+    },
+    MuiTableSortLabel: {
+      root: {
+        "&.MuiTableSortLabel-active": {
+          color: arcOrange
+        },
+        "&:hover": {
+          color: arcOrange
+        },
+
+      },
+      icon: {
+        fill: arcOrange
+      },
+    },
   }
 });
