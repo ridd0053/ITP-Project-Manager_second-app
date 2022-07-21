@@ -122,9 +122,9 @@ export default function ProjectManager() {
   }
 
   const [rows, setRows] = useState([
-    createData("Test 1", "28/10/20", "Website", "E-Commerce", "N/A", "N/A", "N/A", "€1500,-", true),
-    createData("Test 2", "28/10/20", "Custom Software", "GPS, Push Notifications, Users/Authentication, FileTransfer", "Medium", "Web Application", "0-10", "€1600,-", true),
-    createData("Test 3", "28/10/20", "Custom Software", "Photo/Video, FileTransfer, Users/Authentication", "Low", "Web Application", "10-100", "€1600,-", true),
+    createData("Test 1", "28/10/20", "Website", "E-Commerce", "N/A", "N/A", "N/A", "€1500", true),
+    createData("Test 2", "28/10/20", "Custom Software", "GPS, Push Notifications, Users/Authentication, FileTransfer", "Medium", "Web Application", "0-10", "€1600", true),
+    createData("Test 3", "28/10/20", "Custom Software", "Photo/Video, FileTransfer, Users/Authentication", "Low", "Web Application", "10-100", "€1600", true),
   ])
 
   const [search, setSearch] = useState("")
@@ -212,8 +212,17 @@ export default function ProjectManager() {
         <Grid item style={{marginBottom: "35em", marginTop: "5em"}}>
           <EnhancedTable
               rows={rows}
+              setRows={setRows}
               page={page}
               setPage={setPage}
+              websiteChecked={websiteChecked}
+              setWebsiteChecked={setWebsiteChecked}
+              iosChecked={iosChecked}
+              setIosChecked={setIosChecked}
+              androidChecked={androidChecked}
+              setAndroidChecked={setAndroidChecked}
+              softwareChecked={softwareChecked}
+              setSoftwareChecked={setSoftwareChecked}
             />
         </Grid>
         <Dialog fullWidth maxWidth="md" open={dialogOpen} onClose={() => setDialogOpen(false)}>
